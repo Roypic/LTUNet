@@ -1,11 +1,3 @@
-# -*- coding: utf-8 -*-
-# @Time    : 2020-02-26 17:44
-# @Author  : Zonas
-# @Email   : zonas.wang@gmail.com
-# @File    : train.py
-"""
-
-"""
 import argparse
 from PIL import Image
 from torchvision import transforms
