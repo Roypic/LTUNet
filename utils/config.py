@@ -1,11 +1,3 @@
-# -*- coding: utf-8 -*-
-# @Time    : 2020-02-26 17:54
-# @Author  : Zonas
-# @Email   : zonas.wang@gmail.com
-# @File    : config.py
-"""
-
-"""
 import os
 
 

@@ -1,11 +1,3 @@
-# -*- coding: utf-8 -*-
-# @Time    : 2020-02-26 17:46
-# @Author  : Zonas
-# @Email   : zonas.wang@gmail.com
-# @File    : losses.py
-"""
-
-"""
 import torch
 import torch.nn as nn
 import torch.nn.functional as F

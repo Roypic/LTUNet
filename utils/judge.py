@@ -1,7 +1,5 @@
 import torch
 
-
-
 def mask2onehot(mask, n_class):
     """
     Transform a mask to one hot
