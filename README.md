@@ -35,6 +35,10 @@ python train.py
 
 * Haozhe Luo: luohaozhe@stu.scu.edu.cn
 
-### Thanks 
+### Thanks
+Baseline implementations were based on the following repositories:
+* [Dense Prediction Transformer](https://github.com/isl-org/DPT)
+* [TranUnet](https://github.com/Beckschen/TransUNet)
+* [Swin-Unet](https://github.com/HuCaoFighting/Swin-Unet)
 
 
