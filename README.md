@@ -14,10 +14,10 @@ This is the official Pytorch implementation of
 
 * Basic Pytorch dependency
 * Tested on Pytorch 1.3, Python 3.6 
+* Download the data from: 
+https://warwick.ac.uk/fac/cross_fac/tia/data/glascontest/
+https://monuseg.grand-challenge.org/Data/
 * Prepare the data:
-1.download data from https://warwick.ac.uk/fac/cross_fac/tia/data/glascontest/
-		     https://monuseg.grand-challenge.org/Data/
-2.
 ```
   --project
   	train.py
