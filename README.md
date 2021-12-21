@@ -14,6 +14,17 @@ This is the official Pytorch implementation of
 
 * Basic Pytorch dependency
 * Tested on Pytorch 1.3, Python 3.6 
+* Download the data from: 
+https://warwick.ac.uk/fac/cross_fac/tia/data/glascontest/
+https://monuseg.grand-challenge.org/Data/
+* Prepare the data:
+```
+  --project
+  	train.py
+  	 --data
+   		--Train_Folder
+   		--Test_Folder
+``` 
 * Train the model from scratch: 
 python train.py
 

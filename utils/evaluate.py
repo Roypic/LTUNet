@@ -18,7 +18,7 @@ from torch.utils.data import DataLoader, random_split
 #from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
 
-from utils.config import UNetConfig
+from utils.config import Config
 
 from utils.losses import LovaszLossSoftmax
 from utils.losses import LovaszLossHinge
