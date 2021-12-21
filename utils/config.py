@@ -1,12 +1,12 @@
 import os
 
 
-class UNetConfig:
+class Config:
 
     def __init__(self,
                  epochs = 10, # Number of epochs
                  batch_size = 2,    # Batch size
-                 validation = 0.0,   # Percent of the data that is used as validation (0-100)
+                 validation = 15.0,   # Percent of the data that is used as validation (0-100)
                  out_threshold = 0.5,
 
                  optimizer='SGD',
@@ -24,11 +24,11 @@ class UNetConfig:
                  load =False, #False,# True,    #False,   # Load model from a .pth file
                  save_cp = True,
 
-                 model='NestedUNet',
+                 model='LTUNet',
                  bilinear = True,
                  deepsupervision = False,
                  ):
-        super(UNetConfig, self).__init__()
+        super(Config, self).__init__()
 
         self.images_dir = './data/Train_Folder'
         self.testimages_dir='./data/Test_Folder'

@@ -21,22 +21,20 @@ from tqdm import tqdm
 from pandas import DataFrame
 
 from utils.pre_add_gt import confusion_image
-from utils.dataset import BasicDataset
-from utils.config import UNetConfig
+from utils.config import Config
 from utils.losses import LovaszLossSoftmax, LovaszLossHinge,DiceLoss,LogNLLLoss,structure_loss
 from torch.nn.modules.loss import CrossEntropyLoss
 from utils.judge import dice,iou
 from utils.evaluate import eval_net,test_net
 from utils.sch_opti import getscheduler,getoptimizer
-from utils.config import UNetConfig
 from utils.dataset import ImageToImage2D
 from utils.transformation import JointTransform2D
 from torch.utils.tensorboard import SummaryWriter
 from networkarchitest.interaction import LTUNet
 from torchsummary import summary
-cfg = UNetConfig()
+cfg = Config()
 
-def train_net(net, cfg,configs, save_path):
+def train_net(net, cfg, save_path):
     # ------------------------open file，make dataset
     crop = None
     tf_train = JointTransform2D(crop=crop, p_flip=0.5, color_jitter_params=None, long_mask=True)
@@ -49,16 +47,16 @@ def train_net(net, cfg,configs, save_path):
     #------------------------open file，make dataset
     best_score = 0
     val_percent = cfg.validation / 100
-    n_val =len(testset)#int(val_percent*len(dataset)) #len(testset)#
-    n_train = len(dataset)#-n_val
-    #train, val = random_split(dataset, [len(dataset), 0])
-    train=dataset
+    n_val =int(val_percent*len(dataset)) #int(val_percent*len(dataset)) #len(testset)#
+    n_train = len(dataset)-n_val
+    train, val = random_split(dataset, [n_train, n_val])
+    #train=dataset
     train_loader = DataLoader(train,
                               batch_size=cfg.batch_size,
                               shuffle=True,
                               num_workers=0,
                               pin_memory=True)
-    val_loader = DataLoader(testset,
+    val_loader = DataLoader(val,
                             batch_size=cfg.batch_size,
                             shuffle=False,
                             num_workers=0,
@@ -69,7 +67,7 @@ def train_net(net, cfg,configs, save_path):
                             num_workers=0,
                             pin_memory=True)
 
-    writer = SummaryWriter(comment=f'MODEL_{configs.mode}_LR_{cfg.lr}_BS_{cfg.batch_size}_SCALE_{cfg.scale}')
+    writer = SummaryWriter(comment=f'MODEL_{cfg.model}_LR_{cfg.lr}_BS_{cfg.batch_size}_SCALE_{cfg.scale}')
     global_step = 0
 
     logging.info(f'''Starting training:
@@ -88,7 +86,6 @@ def train_net(net, cfg,configs, save_path):
     scheduler = getscheduler('MultiStepLR',cfg,optimizer)
 
     if cfg.n_classes > 1:
-        #criterion=nn.CrossEntropyLoss()
         criterion = LovaszLossSoftmax()
 
     else:
@@ -96,7 +93,6 @@ def train_net(net, cfg,configs, save_path):
 
     for epoch in range(cfg.epochs):
         net.train()
-        test_loss =0
         epoch_loss = 0
         with tqdm(total=n_train, desc=f'Epoch {epoch + 1}/{cfg.epochs}', unit='img') as pbar:
             for batch in train_loader:
@@ -179,12 +175,13 @@ def train_net(net, cfg,configs, save_path):
                 torch.save(net.state_dict(),
                            os.path.join(save_path,"best_score.pth"))
                 logging.info(f'Checkpoint {epoch + 1} saved !')
+
         #日志写入CSV文件中------------------------------------------------------------
         wrtrain.append( ''.join(str(i) for i in [epoch,':',epoch_loss]))
         wrtest.append(''.join(str(i) for i in [epoch, ':', val_score," miou:",iou_score," dice:",dice_score]))
 
     res1,res2,res3=test_net(net, test_loader, device, len(testset), cfg, save_path)
-    wrtotal.append(''.join(str(i) for i in [configs.mode, ":"," miou:", res2, " dice:", res3]))
+    wrtotal.append(''.join(str(i) for i in [cfg.model, ":"," miou:", res2, " dice:", res3]))
     resultdataframe = {"trainloss": wrtrain,
                       "validation": wrtest,
                        "test": wrtotal}#
@@ -204,23 +201,17 @@ def toTensor(img):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--mode', type=str, default='LTUNet',#
-                        help='U_Net/R2U_Net/AttU_Net/R2AttU_Net/NestedUNet/CBAM_U_Net/TransUnet/')
-    parser.add_argument('--times', type=str, default='0',
-                        help='0/1/2/3/4/5')
-    configs = parser.parse_args()
-    # 创建文件夹-------------------------------------------------------------------------------
+    # create folders
     now_time = strftime('%Y-%m-%d %H:%M:%S', localtime())
     now_time = now_time.split(' ')
+    network='LTUNet'
 
-    #创建文件夹--------------------------------------------------------------------------------
+
+    #start
     logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     logging.info(f'Using device {device}')
     print(torch.cuda.is_available())
-    network=configs.mode#networks in our trainning!
-    train_times=configs.times
 
     try:
             if not(os.path.isdir('./train_log/')):
@@ -229,7 +220,7 @@ if __name__ == '__main__':
                             now_time[1].split(':')[1] + '_' + now_time[1].split(':')[2] + str(network)
             os.makedirs(trainlog_path)
 
-            net = eval(network)(3,cfg.n_classes)
+            net = eval(network)(3,cfg.n_classes,inner_dim=192,patches=[5,5])
             logging.info(f'Network:\n'
                          f'\t{network} model\n'
                          f'\t{cfg.n_channels} input channels\n'
@@ -238,15 +229,15 @@ if __name__ == '__main__':
 
             if cfg.load:
                 net.load_state_dict(
-                    torch.load(".//11_7gals_unet.pth", map_location=device)
+                    torch.load("./", map_location=device)
                 )
                 logging.info(f'Model loaded from {cfg.load}')
 
             net.to(device=device)
-            train_thistime_path=trainlog_path+'/time'+str(train_times)
+            train_thistime_path=trainlog_path+'/time'+str(0)
             os.makedirs(train_thistime_path)
 
-            train_net(net=net, cfg=cfg,configs=configs,save_path=train_thistime_path)
+            train_net(net=net, cfg=cfg,save_path=train_thistime_path)
     except KeyboardInterrupt:
         torch.save(net.state_dict(), 'INTERRUPTED.pth')
         logging.info('Saved interrupt')
